@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>UEGuide 智能教学助手</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false, theme: 'dark', themeVariables: { primaryColor: 'rgba(247,147,26,0.25)', primaryTextColor: '#FFFFFF', primaryBorderColor: 'rgba(247,147,26,0.5)', lineColor: '#94A3B8', secondaryColor: '#0F1115', tertiaryColor: '#1E293B' } });
+    window.mermaid = mermaid;
+  </script>
+  <style>
+    /* ========== Bitcoin DeFi design tokens ========== */
+    :root {
+      --void: #030304;
+      --surface: #0F1115;
+      --fg: #FFFFFF;
+      --muted: #94A3B8;
+      --border: #1E293B;
+      --border-light: rgba(255, 255, 255, 0.1);
+      --border-hover: rgba(247, 147, 26, 0.5);
+      --primary: #F7931A;
+      --primary-deep: #EA580C;
+      --gold: #FFD600;
+      --glow-orange: 0 0 20px -5px rgba(234, 88, 12, 0.5);
+      --glow-orange-strong: 0 0 30px -5px rgba(247, 147, 26, 0.6);
+      --glow-orange-soft: 0 0 50px -10px rgba(247, 147, 26, 0.1);
+      --glow-gold: 0 0 20px rgba(255, 214, 0, 0.3);
+      --radius-card: 16px;
+      --radius-pill: 9999px;
+      --radius-input: 8px;
+      --pad: 16px;
+      --gap: 24px;
+      --width-content: 100%;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur: 200ms;
+      --dur-slow: 300ms;
+    }
+
+    @media (prefers-reduced-motion: reduce) { :root { --dur: 0ms; --dur-slow: 0ms; } }
+
+    /* 对话区宽度：小屏满宽，大屏加宽减少两侧空白 */
+    @media (min-width: 640px) { :root { --width-content: 720px; } }
+    @media (min-width: 768px) { :root { --width-content: 800px; } }
+    @media (min-width: 1024px) { :root { --width-content: 960px; } }
+    @media (min-width: 1280px) { :root { --width-content: 1120px; } }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    .font-heading { font-family: 'Space Grotesk', sans-serif; }
+    .font-body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--void);
+      color: var(--fg);
+      font-size: 15px;
+      line-height: 1.6;
+      position: relative;
+    }
+
+    /* Textured void: grid pattern with vignette */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-size: 50px 50px;
+      background-image:
+        linear-gradient(to right, rgba(30, 41, 59, 0.5) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(30, 41, 59, 0.5) 1px, transparent 1px);
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Ambient orange glow (subtle radial blur) */
+    body::after {
+      content: "";
+      position: fixed;
+      top: -20%;
+      left: 50%;
+      width: 120%;
+      height: 60%;
+      background: radial-gradient(ellipse at center, rgba(247, 147, 26, 0.06) 0%, transparent 70%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body::after { opacity: 0.5; }
+    }
+
+    /* ========== Header (glass surface) ========== */
+    .header {
+      position: relative;
+      z-index: 1;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px var(--gap);
+      padding-top: max(20px, env(safe-area-inset-top));
+      padding-bottom: 20px;
+      padding-left: max(var(--pad), env(safe-area-inset-left));
+      padding-right: max(var(--pad), env(safe-area-inset-right));
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-light);
+      transition: border-color var(--dur) var(--ease);
+    }
+    .header:hover { border-bottom-color: var(--border-hover); }
+    .header-logo {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .header-icon {
+      width: 24px;
+      height: 24px;
+      color: var(--primary);
+      filter: drop-shadow(0 0 8px rgba(247, 147, 26, 0.4));
+    }
+    .header h1 {
+      margin: 0;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--fg);
+    }
+    .header p {
+      margin: 6px 0 0;
+      font-size: 0.9375rem;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+    }
+    .header-text { flex: 1; min-width: 0; }
+    .header-tagline {
+      margin-left: auto;
+      font-size: 0.9375rem;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+    }
+    @media (max-width: 768px) {
+      .header-tagline { display: none; }
+    }
+
+    /* ========== Chat ========== */
+    #chat {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: var(--gap);
+      padding-left: max(var(--pad), env(safe-area-inset-left));
+      padding-right: max(var(--pad), env(safe-area-inset-right));
+      padding-bottom: 120px;
+      max-width: var(--width-content);
+      width: 100%;
+      margin: 0 auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chat-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 200px);
+      min-height: calc(100dvh - 200px);
+      padding: var(--gap) calc(var(--gap) * 1.5);
+      text-align: center;
+      transform: translateY(-60px);
+    }
+    .chat-empty.hidden { display: none; }
+    .chat-empty .welcome-title {
+      margin: 0 0 16px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .chat-empty .welcome-desc {
+      margin: 0 0 var(--gap);
+      font-size: 1.125rem;
+      color: var(--muted);
+      max-width: 420px;
+    }
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .suggestions button {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--fg);
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-pill);
+      padding: 16px 28px;
+      min-height: 52px;
+      cursor: pointer;
+      transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    }
+    .suggestions button:hover {
+      border-color: var(--fg);
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: var(--glow-orange-soft);
+    }
+    .suggestions button:focus-visible {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--void), 0 0 0 4px var(--primary);
+    }
+
+    /* ========== Messages ========== */
+    .msg { margin-bottom: var(--gap); }
+    .msg .role {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .msg.user { text-align: right; }
+    .msg.user .bubble {
+      display: inline-block;
+      text-align: left;
+      max-width: 88%;
+      padding: 12px 20px;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(to right, var(--primary-deep), var(--primary));
+      color: #fff;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 0;
+      box-shadow: var(--glow-orange);
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      min-height: 44px;
+      transition: box-shadow var(--dur-slow) var(--ease), transform var(--dur) var(--ease);
+    }
+    .msg.user .bubble:hover {
+      box-shadow: var(--glow-orange-strong);
+      transform: scale(1.02);
+    }
+    .msg.user .bubble:active { transform: scale(0.98); }
+    @media (min-width: 768px) { .msg.user .bubble { max-width: 80%; } }
+
+    .msg.assistant .bubble {
+      padding: var(--pad);
+      border-radius: var(--radius-card);
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--glow-orange-soft);
+      font-size: 0.9375rem;
+      line-height: 1.55;
+      transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+    }
+    .msg.assistant .bubble:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 0 30px -10px rgba(247, 147, 26, 0.2);
+      transform: translateY(-2px);
+    }
+    .msg.assistant .bubble h1, .msg.assistant .bubble h2, .msg.assistant .bubble h3 {
+      margin-top: 0.75em;
+      margin-bottom: 0.35em;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .msg.assistant .bubble h1:first-child, .msg.assistant .bubble h2:first-child, .msg.assistant .bubble h3:first-child { margin-top: 0; }
+    .msg.assistant .bubble h1 { font-size: 1.125rem; }
+    .msg.assistant .bubble h2 { font-size: 1rem; }
+    .msg.assistant .bubble h3 { font-size: 0.9375rem; }
+    .msg.assistant .bubble p { margin: 0.5em 0; color: var(--fg); }
+    .msg.assistant .bubble ul, .msg.assistant .bubble ol { margin: 0.5em 0; padding-left: 1.35em; color: var(--fg); }
+    .msg.assistant .bubble pre {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 12px var(--pad);
+      border-radius: var(--radius-input);
+      border: 1px solid var(--border-light);
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+      margin: 0.75em 0;
+      color: var(--fg);
+    }
+    .msg.assistant .bubble code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(247, 147, 26, 0.12);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.875em;
+      color: var(--primary);
+      border: 1px solid rgba(247, 147, 26, 0.2);
+    }
+    .msg.assistant .bubble pre code { background: none; border: none; padding: 0; color: inherit; }
+    .msg.assistant .bubble table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.875rem;
+      margin: 0.75em 0;
+    }
+    .msg.assistant .bubble th, .msg.assistant .bubble td {
+      border: 1px solid var(--border-light);
+      padding: 12px var(--pad);
+      text-align: left;
+      color: var(--fg);
+    }
+    .msg.assistant .bubble th { background: rgba(255, 255, 255, 0.05); color: var(--fg); font-weight: 500; }
+    .msg.assistant .bubble a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color var(--dur) var(--ease);
+    }
+    .msg.assistant .bubble a:hover { color: var(--gold); text-decoration: underline; }
+    .msg.assistant .bubble blockquote {
+      margin: 0.75em 0;
+      padding-left: var(--pad);
+      border-left: 3px solid var(--primary);
+      color: var(--muted);
+      font-style: italic;
+    }
+    .msg .mermaid-wrap {
+      background: rgba(0, 0, 0, 0.4);
+      padding: var(--pad);
+      border-radius: var(--radius-input);
+      border: 1px solid var(--border-light);
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+    .msg .mermaid-wrap .mermaid { display: flex; justify-content: center; }
+
+    /* ========== Input row (glass, centered in viewport) ========== */
+    .input-row {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: var(--pad) 48px;
+      padding-left: max(48px, env(safe-area-inset-left));
+      padding-right: max(48px, env(safe-area-inset-right));
+      padding-bottom: max(var(--pad), env(safe-area-inset-bottom));
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-light);
+      border-top-left-radius: var(--radius-card);
+      border-top-right-radius: var(--radius-card);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      box-shadow: var(--glow-orange-soft);
+    }
+
+    .input-row form {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      max-width: min(2400px, 98vw);
+      width: 100%;
+      min-width: 0;
+      margin: 0 auto;
+    }
+    .input-row input[type="text"] {
+      flex: 1 1 0%;
+      min-width: 480px;
+      height: 48px;
+      padding: 0 var(--pad);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      color: var(--fg);
+      background: rgba(0, 0, 0, 0.5);
+      border: 0;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0;
+      transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    }
+    .input-row input[type="text"]::placeholder { color: rgba(255, 255, 255, 0.3); }
+    .input-row input[type="text"]:focus {
+      outline: none;
+      border-bottom-color: var(--primary);
+      box-shadow: 0 10px 20px -10px rgba(247, 147, 26, 0.3);
+    }
+    .input-row input[type="text"]:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--void), 0 0 0 4px var(--primary);
+    }
+    .btn-send {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: linear-gradient(to right, var(--primary-deep), var(--primary));
+      color: #fff;
+      border: 0;
+      border-radius: var(--radius-pill);
+      box-shadow: var(--glow-orange);
+      cursor: pointer;
+      transition: box-shadow var(--dur-slow) var(--ease), transform var(--dur) var(--ease);
+    }
+    .btn-send:hover:not(:disabled) {
+      box-shadow: var(--glow-orange-strong);
+      transform: scale(1.05);
+    }
+    .btn-send:active:not(:disabled) { transform: scale(0.98); }
+    .btn-send:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--void), 0 0 0 4px var(--primary), var(--glow-orange);
+    }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-send svg { width: 20px; height: 20px; }
+
+    .loading { color: var(--muted); font-size: 0.875rem; }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <img src="/static/ueguide-logo.png" alt="UEGuide" class="header-logo" width="52" height="52">
+    <div class="header-text">
+      <h1 class="font-heading">UEGuide 智能教学助手</h1>
+    </div>
+    <span class="header-tagline">文字对话 · 流程图 · 推荐链接 · 教案为本 · 官方为据</span>
+  </header>
+  <main id="chat" role="log" aria-live="polite" aria-label="对话记录">
+    <div class="chat-empty" id="welcome" aria-label="欢迎与示例问题">
+      <p class="welcome-title">需要了解哪方面？</p>
+      <p class="welcome-desc">输入问题发送，或从下方选择示例开始</p>
+      <ul class="suggestions">
+        <li><button type="button" data-q="什么是蓝图？">什么是蓝图？</button></li>
+        <li><button type="button" data-q="怎么创建第一个项目？">怎么创建第一个项目？</button></li>
+        <li><button type="button" data-q="内容浏览器怎么用？">内容浏览器怎么用？</button></li>
+      </ul>
+    </div>
+  </main>
+  <div class="input-row">
+    <form id="form" role="search" aria-label="发送消息">
+      <label for="input" class="visually-hidden">消息内容</label>
+      <input type="text" id="input" placeholder="输入问题…" autocomplete="off" aria-label="消息内容">
+      <button type="submit" id="send" class="btn-send" aria-label="发送">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </form>
+  </div>
+  <script>
+    (function() {
+      const chat = document.getElementById('chat');
+      const welcome = document.getElementById('welcome');
+      const form = document.getElementById('form');
+      const input = document.getElementById('input');
+      const sendBtn = document.getElementById('send');
+
+      marked.setOptions({ gfm: true, breaks: true });
+
+      function hideWelcome() {
+        if (welcome && !welcome.classList.contains('hidden')) welcome.classList.add('hidden');
+      }
+
+      function appendMessage(role, text, isMarkdown) {
+        hideWelcome();
+        const wrap = document.createElement('div');
+        wrap.className = 'msg ' + role;
+        wrap.setAttribute('role', 'listitem');
+        const roleLabel = role === 'user' ? '我' : '助手';
+        wrap.innerHTML = '<div class="role">' + roleLabel + '</div><div class="bubble"></div>';
+        const bubble = wrap.querySelector('.bubble');
+        if (isMarkdown && role === 'assistant') {
+          const html = marked.parse(text || '');
+          bubble.innerHTML = html;
+          const mermaidBlocks = bubble.querySelectorAll('pre code.language-mermaid');
+          mermaidBlocks.forEach(function(block) {
+            const code = block.textContent;
+            const div = document.createElement('div');
+            div.className = 'mermaid-wrap';
+            const mermaidDiv = document.createElement('div');
+            mermaidDiv.className = 'mermaid';
+            mermaidDiv.textContent = code;
+            div.appendChild(mermaidDiv);
+            block.closest('pre').replaceWith(div);
+          });
+          if (window.mermaid && bubble.querySelectorAll('.mermaid').length) {
+            window.mermaid.run({ nodes: bubble.querySelectorAll('.mermaid') });
+          }
+        } else {
+          bubble.textContent = text || '';
+        }
+        chat.appendChild(wrap);
+        chat.scrollTop = chat.scrollHeight;
+        input.focus();
+      }
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const content = (input.value || '').trim();
+        if (!content) return;
+        input.value = '';
+        appendMessage('user', content, false);
+        sendBtn.disabled = true;
+        const loading = document.createElement('div');
+        loading.className = 'msg assistant';
+        loading.setAttribute('aria-busy', 'true');
+        loading.innerHTML = '<div class="role">助手</div><div class="bubble loading">正在回复…</div>';
+        chat.appendChild(loading);
+        chat.scrollTop = chat.scrollHeight;
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: content })
+          });
+          const data = await res.json();
+          loading.remove();
+          if (res.ok && data.content != null) {
+            appendMessage('assistant', data.content, true);
+          } else {
+            appendMessage('assistant', '错误：' + (data.error || res.status), false);
+          }
+        } catch (err) {
+          loading.remove();
+          appendMessage('assistant', '请求失败：' + err.message, false);
+        }
+        sendBtn.disabled = false;
+      });
+
+      if (welcome) {
+        welcome.addEventListener('click', function(e) {
+          var btn = e.target.closest('button[data-q]');
+          if (!btn) return;
+          var q = (btn.getAttribute('data-q') || '').trim();
+          if (!q) return;
+          input.value = q;
+          input.focus();
+          form.requestSubmit();
+        });
+      }
+      input.focus();
+    })();
+  </script>
+</body>
+</html>

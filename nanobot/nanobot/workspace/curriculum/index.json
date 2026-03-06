@@ -1,0 +1,64 @@
+{
+  "lessons": [
+    {
+      "id": "ue-vr-college-001",
+      "title": "虚拟现实UE课程职业技术学院教案",
+      "course": "虚拟现实UE",
+      "hours": 10,
+      "created_at": "2026-02-09T12:00:00",
+      "updated_at": "2026-02-09T12:00:00",
+      "file_path": "lessons/lesson-ue-vr-college-001.md",
+      "keywords": [
+        "UE",
+        "Unreal Engine",
+        "虚幻引擎",
+        "Epic Games",
+        "蓝图",
+        "材质",
+        "地形编辑",
+        "光照系统",
+        "Lumen",
+        "3Dmax",
+        "展馆设计",
+        "模型导入",
+        "碰撞设置",
+        "Sequence",
+        "打包发布",
+        "职业技术学院",
+        "PIE",
+        "SIE",
+        "内容浏览器",
+        "关卡设置"
+      ],
+      "description": "职业技术学院虚拟现实UE课程教案，包含10个课时的完整教学内容，从虚幻引擎获取安装、工具使用、材质编辑、地形搭建、光照系统、模型导入、蓝图交互到项目打包发布的完整流程。"
+    },
+    {
+      "id": "ue-vr-course-001",
+      "title": "虚拟现实UE课程",
+      "course": "虚拟现实UE",
+      "hours": 64,
+      "created_at": "2026-02-09T10:00:00",
+      "updated_at": "2026-02-09T10:00:00",
+      "file_path": "lessons/lesson-ue-vr-course-001.md",
+      "keywords": [
+        "UE",
+        "Unreal Engine",
+        "虚拟现实",
+        "VR",
+        "蓝图",
+        "可视化编程",
+        "VR交互",
+        "VR场景",
+        "项目开发",
+        "性能优化",
+        "VR发布",
+        "游戏开发",
+        "UE5"
+      ],
+      "description": "虚拟现实UE课程完整教案，包含UE5基础、蓝图编程、VR开发、场景设计、项目实战等内容，共64课时。"
+    }
+  ],
+  "version": "1.0",
+  "created_at": "2026-02-09T00:00:00",
+  "updated_at": "2026-02-09T12:00:00"
+}
